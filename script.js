@@ -1,6 +1,6 @@
 // Global variables
 const API_KEY = '141234c09b9d4da5b8921dd2c1ba328f';
-const BASE_URL = 'https://pro-api.coinmarketcap.com'; // Use CoinMarketCap API directly
+const BASE_URL = '/api'; // Use Netlify functions for API calls
 let allOpportunities = [];
 let filteredOpportunities = [];
 let exchanges = new Set();
@@ -71,9 +71,8 @@ function setupEventListeners() {
 // API Functions
 async function fetchCryptocurrencyListings() {
     try {
-        const response = await fetch(`${BASE_URL}/v1/cryptocurrency/listings/latest?limit=100`, {
+        const response = await fetch(`${BASE_URL}/cryptocurrencies`, {
             headers: {
-                'X-CMC_PRO_API_KEY': API_KEY,
                 'Accept': 'application/json'
             }
         });
@@ -94,9 +93,8 @@ async function fetchQuotes(cryptocurrencies) {
     const symbols = cryptocurrencies.map(crypto => crypto.symbol).join(',');
     
     try {
-        const response = await fetch(`${BASE_URL}/v2/cryptocurrency/quotes/latest?symbol=${symbols}`, {
+        const response = await fetch(`${BASE_URL}/quotes?symbol=${symbols}`, {
             headers: {
-                'X-CMC_PRO_API_KEY': API_KEY,
                 'Accept': 'application/json'
             }
         });
