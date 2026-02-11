@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KidoScanner - Arbitrage Scanner</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <h1>KidoScanner</h1>
+                    <span id="dataSource" style="font-size: 0.8rem; color: #8b949e; margin-left: 10px;">Loading...</span>
+                </div>
+                <div class="header-controls">
+                    <button id="refreshBtn" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <div class="auto-refresh">
+                        <label>
+                            <input type="checkbox" id="autoRefresh">
+                            Auto Refresh
+                        </label>
+                        <select id="refreshInterval">
+                            <option value="5">5s</option>
+                            <option value="10">10s</option>
+                            <option value="30">30s</option>
+                            <option value="60">1m</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <section class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Total Opportunities</h3>
+                    <span id="totalOpportunities" class="stat-value">0</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Avg. Spread</h3>
+                    <span id="avgSpread" class="stat-value">0%</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Best Opportunity</h3>
+                    <span id="bestOpportunity" class="stat-value">0%</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Active Exchanges</h3>
+                    <span id="activeExchanges" class="stat-value">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters Section -->
+        <section class="filters">
+            <div class="filter-group">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="coinSearch" placeholder="Search coins...">
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <label>Min Spread (%)</label>
+                <input type="number" id="minSpread" value="0.5" step="0.1" min="0">
+            </div>
+            
+            <div class="filter-group">
+                <label>Max Spread (%)</label>
+                <input type="number" id="maxSpread" value="50" step="1" min="0">
+            </div>
+            
+            <div class="filter-group">
+                <label>Exchanges</label>
+                <div id="exchangeFilters" class="exchange-filters">
+                    <!-- Exchange filters will be populated dynamically -->
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <button id="applyFilters" class="btn btn-secondary">
+                    <i class="fas fa-filter"></i> Apply Filters
+                </button>
+                <button id="resetFilters" class="btn btn-outline">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Loading arbitrage opportunities...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="errorText"></span>
+            </div>
+
+            <!-- Opportunities Table -->
+            <div class="table-container">
+                <table id="arbitrageTable" class="arbitrage-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('symbol')">
+                                Coin <i class="fas fa-sort"></i>
+                            </th>
+                            <th onclick="sortTable('name')">
+                                Name <i class="fas fa-sort"></i>
+                            </th>
+                            <th onclick="sortTable('lowestExchange')">
+                                Buy From <i class="fas fa-sort"></i>
+                            </th>
+                            <th onclick="sortTable('lowestPrice')">
+                                Lowest Price <i class="fas fa-sort"></i>
+                            </th>
+                            <th onclick="sortTable('highestExchange')">
+                                Sell To <i class="fas fa-sort"></i>
+                            </th>
+                            <th onclick="sortTable('highestPrice')">
+                                Highest Price <i class="fas fa-sort"></i>
+                            </th>
+                            <th onclick="sortTable('spread')">
+                                Spread <i class="fas fa-sort"></i>
+                            </th>
+                            <th onclick="sortTable('volume24h')">
+                                24h Volume <i class="fas fa-sort"></i>
+                            </th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="arbitrageTableBody">
+                        <!-- Table rows will be populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- No Results Message -->
+            <div id="noResults" class="no-results" style="display: none;">
+                <i class="fas fa-search"></i>
+                <h3>No arbitrage opportunities found</h3>
+                <p>Try adjusting your filters or check back later</p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2026 KidoScanner. Real-time arbitrage scanner powered by CoinMarketCap</p>
+                <div class="disclaimer">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Trading carries risk. Always do your own research.</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal for coin details -->
+    <div id="coinModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <h2 id="modalCoinName">Coin Details</h2>
+            </div>
+            <div class="modal-body">
+                <div id="coinDetails">
+                    <!-- Coin details will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="scanner.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

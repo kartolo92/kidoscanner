@@ -1,0 +1,22 @@
+{
+  "name": "kido-scanner",
+  "version": "1.0.0",
+  "description": "KidoScanner - Real-time crypto arbitrage scanner",
+  "main": "index.html",
+  "scripts": {
+    "start": "echo 'Running static site - open index.html in browser'",
+    "dev": "echo 'Development mode - open index.html in browser'",
+    "build": "echo 'Static site build complete'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": ["crypto", "arbitrage", "trading", "bitcoin", "altcoins"],
+  "author": "KidoScanner",
+  "license": "MIT"
+}
