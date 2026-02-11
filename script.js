@@ -180,24 +180,75 @@ async function fetchMarketPairs(symbol) {
 
 // Main function to load arbitrage opportunities
 async function loadOpportunities() {
-    showLoading();
-    hideError();
+    console.log('🚀 loadOpportunities called!');
     
     try {
-        // Try API first, fallback to demo data if it fails
-        let cryptocurrencies;
-        let quotes;
+        showLoading();
+        hideError();
         
         // Try API first for real-time data
         try {
-            console.log('Fetching real-time data from CoinMarketCap...');
+            console.log('Fetching real-time data from LiveCoinWatch...');
             cryptocurrencies = await fetchCryptocurrencyListings();
             quotes = await fetchQuotes(cryptocurrencies);
             
-            // DEBUG: Log specific XRP price to verify it's correct
-            if (quotes.XRP && quotes.XRP[0]) {
-                console.log('🔍 DEBUG - XRP Real Price:', quotes.XRP[0].quote.USD.price);
+            console.log('✅ Successfully loaded', cryptocurrencies.length, 'cryptocurrencies and', Object.keys(quotes).length, 'quotes');
+            
+            // Update data source indicator
+            const dataSourceElement = document.getElementById('dataSource');
+            if (dataSourceElement) {
+                dataSourceElement.innerHTML = '<span style="color: #238636;">● LiveCoinWatch API</span>';
             }
+            
+        } catch (apiError) {
+            console.log('❌ API call failed, falling back to demo data:', apiError.message);
+            
+            // Update data source indicator to show demo mode
+            const dataSourceElement = document.getElementById('dataSource');
+            if (dataSourceElement) {
+                dataSourceElement.innerHTML = '<span style="color: #d29922;">● Demo Data</span>';
+            }
+            
+            const demoData = generateDemoData();
+            cryptocurrencies = demoData.cryptocurrencies;
+            quotes = demoData.quotes;
+        }
+        
+        allOpportunities = [];
+        exchanges.clear();
+        
+        // Calculate arbitrage opportunities for each cryptocurrency
+        for (const crypto of cryptocurrencies) {
+            const quoteData = quotes[crypto.symbol];
+            if (!quoteData || !quoteData[0]) continue;
+            
+            const opportunity = await calculateArbitrageOpportunity(crypto, quoteData[0]);
+            if (opportunity) {
+                allOpportunities.push(opportunity);
+                
+                // Collect exchanges
+                if (opportunity.lowestExchange) exchanges.add(opportunity.lowestExchange);
+                if (opportunity.highestExchange) exchanges.add(opportunity.highestExchange);
+            }
+        }
+        
+        // Sort opportunities by spread
+        allOpportunities.sort((a, b) => b.spread - a.spread);
+        
+        filteredOpportunities = [...allOpportunities];
+        
+        console.log('📊 Calculated', allOpportunities.length, 'arbitrage opportunities');
+        
+        updateUI();
+        
+    } catch (error) {
+        console.error('❌ Error loading opportunities:', error);
+        showError('Failed to load data. Please refresh the page.');
+        
+    } finally {
+        hideLoading();
+    }
+}
             
             console.log('Successfully loaded real-time API data from CoinMarketCap');
         } catch (apiError) {
