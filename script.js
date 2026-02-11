@@ -69,13 +69,36 @@ function setupEventListeners() {
     });
 }
 
-// API Functions
+// API Functions - Using LiveCoinWatch direct API calls
 async function fetchCryptocurrencyListings() {
     try {
-        // Try demo API first (always available)
-        if (useDemoAPI || window.fetchCryptocurrencyListings) {
+        // Use LiveCoinWatch API that's loaded in livecoinwatch-api.js
+        if (window.fetchCryptocurrencyListings) {
             return await window.fetchCryptocurrencyListings();
         }
+        
+        throw new Error('LiveCoinWatch API not loaded');
+    } catch (error) {
+        console.error('Error fetching cryptocurrency listings:', error);
+        throw error;
+    }
+}
+
+async function fetchQuotes(cryptocurrencies) {
+    const symbols = cryptocurrencies.map(crypto => crypto.symbol).join(',');
+    
+    try {
+        // Use LiveCoinWatch API that's loaded in livecoinwatch-api.js
+        if (window.fetchQuotes) {
+            return await window.fetchQuotes(symbols);
+        }
+        
+        throw new Error('LiveCoinWatch API not loaded');
+    } catch (error) {
+        console.error('Error fetching quotes:', error);
+        throw error;
+    }
+}
         
         const response = await fetch(`${BASE_URL}/cryptocurrencies`, {
             headers: {
