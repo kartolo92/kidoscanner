@@ -2,8 +2,8 @@
 const axios = require('axios');
 
 // Get API key from environment variables
-const API_KEY = process.env.CMC_API_KEY;
-const BASE_URL = 'https://pro-api.coinmarketcap.com';
+const API_KEY = process.env.CMC_API_KEY || '001020d6-7b72-4246-8add-dacb61a40cb0';
+const BASE_URL = 'https://api.livecoinwatch.com';
 
 exports.handler = async function(event, context) {
     const headers = {
@@ -20,44 +20,37 @@ exports.handler = async function(event, context) {
     }
 
     try {
-        // Return demo data if no API key
-        if (!API_KEY) {
-            const demoData = {
-                data: [
-                    { id: 1, symbol: 'BTC', name: 'Bitcoin' },
-                    { id: 1027, symbol: 'ETH', name: 'Ethereum' },
-                    { id: 1839, symbol: 'BNB', name: 'Binance Coin' },
-                    { id: 74, symbol: 'DOGE', name: 'Dogecoin' },
-                    { id: 52, symbol: 'XRP', name: 'Ripple' },
-                    { id: 825, symbol: 'USDT', name: 'Tether' },
-                    { id: 2, symbol: 'LTC', name: 'Litecoin' },
-                    { id: 2010, symbol: 'ADA', name: 'Cardano' },
-                    { id: 5426, symbol: 'SOL', name: 'Solana' },
-                    { id: 7083, symbol: 'AVAX', name: 'Avalanche' }
-                ]
-            };
-            return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify(demoData)
-            };
-        }
+        // Use LiveCoinWatch API for cryptocurrency data
+        const payload = {
+            currency: "USD",
+            sort: "rank",
+            order: "ascending",
+            offset: 0,
+            limit: 50,
+            meta: true
+        };
 
-        const url = `${BASE_URL}/v1/cryptocurrency/listings/latest?limit=100`;
-        console.log(`Fetching data from: ${url}`);
-        
-        const response = await axios.get(url, {
+        const response = await axios.post(`${BASE_URL}/coins/list`, payload, {
             headers: {
-                'X-CMC_PRO_API_KEY': API_KEY,
-                'Accept': 'application/json'
+                'Content-Type': 'application/json',
+                'x-api-key': API_KEY
             },
             timeout: 10000
         });
 
+        // Transform LiveCoinWatch data to match expected format
+        const transformedData = {
+            data: response.data.map(coin => ({
+                id: coin.code,
+                symbol: coin.code,
+                name: coin.name || coin.code
+            }))
+        };
+
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify(response.data)
+            body: JSON.stringify(transformedData)
         };
 
     } catch (error) {

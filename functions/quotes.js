@@ -2,8 +2,8 @@
 const axios = require('axios');
 
 // Get API key from environment variables
-const API_KEY = process.env.CMC_API_KEY;
-const BASE_URL = 'https://pro-api.coinmarketcap.com';
+const API_KEY = process.env.CMC_API_KEY || '001020d6-7b72-4246-8add-dacb61a40cb0';
+const BASE_URL = 'https://api.livecoinwatch.com';
 
 exports.handler = async function(event, context) {
     const headers = {
@@ -23,54 +23,51 @@ exports.handler = async function(event, context) {
         const { queryStringParameters } = event;
         const symbols = queryStringParameters.symbol || 'BTC,ETH,BNB';
         
-        // Return demo data if no API key
-        if (!API_KEY) {
-            const symbolList = symbols.split(',');
-            const quotes = {};
-            
-            symbolList.forEach(symbol => {
-                const basePrice = Math.random() * 1000 + 1;
-                const volume24h = Math.random() * 1000000000;
-                const marketCap = Math.random() * 50000000000;
-                const priceChange24h = (Math.random() - 0.5) * 20;
-                
+        // Use LiveCoinWatch API for quotes
+        const symbolList = symbols.split(',');
+        const quotes = {};
+
+        for (const symbol of symbolList) {
+            const payload = {
+                currency: "USD",
+                code: symbol.trim(),
+                meta: true
+            };
+
+            try {
+                const response = await axios.post(`${BASE_URL}/coins/single`, payload, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': API_KEY
+                    },
+                    timeout: 10000
+                });
+
+                // Transform LiveCoinWatch data to match expected format
                 quotes[symbol] = [{
-                    id: Math.floor(Math.random() * 10000),
-                    name: `${symbol} Token`,
-                    symbol: symbol.trim(),
+                    id: response.data.code,
+                    name: response.data.name || response.data.code,
+                    symbol: response.data.code,
                     quote: {
                         USD: {
-                            price: basePrice,
-                            volume_24h: volume24h,
-                            market_cap: marketCap,
-                            percent_change_24h: priceChange24h
+                            price: response.data.rate,
+                            volume_24h: response.data.volume || 0,
+                            market_cap: response.data.cap || 0,
+                            percent_change_24h: ((response.data.delta || 1) - 1) * 100
                         }
                     }
                 }];
-            });
-            
-            return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify({ data: quotes })
-            };
+            } catch (error) {
+                console.error(`Error fetching ${symbol}:`, error.message);
+                // Skip this symbol if there's an error
+                continue;
+            }
         }
-        
-        const url = `${BASE_URL}/v2/cryptocurrency/quotes/latest?symbol=${symbols}`;
-        console.log(`Fetching data from: ${url}`);
-        
-        const response = await axios.get(url, {
-            headers: {
-                'X-CMC_PRO_API_KEY': API_KEY,
-                'Accept': 'application/json'
-            },
-            timeout: 10000
-        });
 
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify(response.data)
+            body: JSON.stringify({ data: quotes })
         };
 
     } catch (error) {

@@ -1,7 +1,7 @@
 // Global variables
-const API_KEY = '141234c09b9d4da5b8921dd2c1ba328f';
+const API_KEY = '001020d6-7b72-4246-8add-dacb61a40cb0';
 const BASE_URL = '/api'; // Use Netlify functions for API calls
-let useDemoAPI = true; // Start with demo API for immediate functionality
+let useDemoAPI = false; // Use LiveCoinWatch API now
 let allOpportunities = [];
 let filteredOpportunities = [];
 let exchanges = new Set();
