@@ -1,6 +1,7 @@
 // Global variables
 const API_KEY = '141234c09b9d4da5b8921dd2c1ba328f';
 const BASE_URL = '/api'; // Use Netlify functions for API calls
+let useDemoAPI = true; // Start with demo API for immediate functionality
 let allOpportunities = [];
 let filteredOpportunities = [];
 let exchanges = new Set();
@@ -71,6 +72,11 @@ function setupEventListeners() {
 // API Functions
 async function fetchCryptocurrencyListings() {
     try {
+        // Try demo API first (always available)
+        if (useDemoAPI || window.fetchCryptocurrencyListings) {
+            return await window.fetchCryptocurrencyListings();
+        }
+        
         const response = await fetch(`${BASE_URL}/cryptocurrencies`, {
             headers: {
                 'Accept': 'application/json'
@@ -85,6 +91,12 @@ async function fetchCryptocurrencyListings() {
         return data.data;
     } catch (error) {
         console.error('Error fetching cryptocurrency listings:', error);
+        
+        // Fallback to demo API
+        if (window.fetchCryptocurrencyListings) {
+            console.log('Falling back to demo API...');
+            return await window.fetchCryptocurrencyListings();
+        }
         throw error;
     }
 }
@@ -93,6 +105,11 @@ async function fetchQuotes(cryptocurrencies) {
     const symbols = cryptocurrencies.map(crypto => crypto.symbol).join(',');
     
     try {
+        // Try demo API first (always available)
+        if (useDemoAPI || window.fetchQuotes) {
+            return await window.fetchQuotes(symbols);
+        }
+        
         const response = await fetch(`${BASE_URL}/quotes?symbol=${symbols}`, {
             headers: {
                 'Accept': 'application/json'
@@ -107,6 +124,12 @@ async function fetchQuotes(cryptocurrencies) {
         return data.data;
     } catch (error) {
         console.error('Error fetching quotes:', error);
+        
+        // Fallback to demo API
+        if (window.fetchQuotes) {
+            console.log('Falling back to demo API...');
+            return await window.fetchQuotes(symbols);
+        }
         throw error;
     }
 }
